@@ -1,0 +1,36 @@
+window, scrollwindow, textview, textview text {
+    background-color: beige;
+    color: tan;
+}
+box {
+}
+
+textview {
+    font-size: 16px;
+    color: tan;
+    /* Recommended */
+    /*
+    font-family: 'Noto Serif', serif;*/
+    font-family: 'Noto Serif TC', serif;
+    /*
+    font-family: 'Crimson Text', serif;
+    font-family: 'Nunito Sans', sans-serif;
+    font-family: 'Maven Pro', sans-serif;*/
+    /*font-family: 'Inconsolata', monospace;
+    
+    font-family: 'Cutive Mono', monospace;
+    font-family: Helvetica, Arial,sans-serif;*/
+}
+
+.bold {
+    font-weight: bold;
+}
+.italic {
+    font-style: italic;
+}
+.head {
+    font-weight: bold;
+    font-size: 18px;
+}
+
+
