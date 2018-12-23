@@ -82,7 +82,10 @@ class Markdown:
         return
     
     def styleDoc(self):
-        
+        self.styleScope( 
+            self.textBuffer.get_start_iter(),
+            self.textBuffer.get_end_iter()
+        )
         return
     
     def updateCurrentSentence( self ):

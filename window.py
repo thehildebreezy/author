@@ -13,6 +13,11 @@ class AuthorWindow(Gtk.Window):
         # sets minimum size
         self.set_size_request( 600, 400 )
         
+        # useful for saved or not
+        self.docPath = None
+        
+        self.modified = False
+        
         # set up styles
         screen = Gdk.Screen.get_default()
 
@@ -56,6 +61,18 @@ class AuthorWindow(Gtk.Window):
         self.connect("destroy", Gtk.main_quit)
         self.show_all()
 
+
+    # update window title
+    def updateTitle( self ):
+        if self.docPath:
+            title_path = self.docPath
+        else:
+            title_path = "Author"
+        if self.modified:
+            title_path += "*"
+        self.set_title( title_path )
+        return
+
     # Set the indent overall, if we need to
     def setIndent(self, indent=-40 ):
         self.textView.set_indent( indent )
@@ -81,6 +98,8 @@ class AuthorWindow(Gtk.Window):
     def bufferChange( self, target ):
         # set up markdown handler
         self.markdown.pointUpdate()
+        self.modified = True
+        self.updateTitle()
         return
         
     
@@ -95,6 +114,16 @@ class AuthorWindow(Gtk.Window):
         self.markdown.updateCurrentSentence()
         return
     
+    # keyboard shortcuts
+    def keyShortCuts( self, target, event ):
+        if event.get_state() & Gdk.ModifierType.CONTROL_MASK:
+            keyval = Gdk.keyval_name( event.keyval )
+            if keyval == 'o':
+                self.open_doc()
+            elif keyval == 's':
+                self.save_doc()
+        return
+    
     # Scroll the content to where the line is
     def typeWriterScroll( self ):
         # then location of cursor
@@ -104,11 +133,82 @@ class AuthorWindow(Gtk.Window):
         self.scrolledWindow.get_vscrollbar().set_value( loc )
         
         return
+    
+    def open_doc( self ):
+        dialog = Gtk.FileChooserDialog("Open document", self,
+            Gtk.FileChooserAction.OPEN,
+            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+             Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+
+        filter_any = Gtk.FileFilter()
+        filter_any.set_name("Any files")
+        filter_any.add_pattern("*")
+        dialog.add_filter(filter_any)
+
+        response = dialog.run()
+        if response == Gtk.ResponseType.OK:
+            docPath = dialog.get_filename()
+            try:
+                f = open(docPath, 'r')
+                buf = self.textView.get_buffer()
+                buf.set_text( f.read() )
+                self.markdown.styleDoc()
+                self.docPath = docPath
+                self.modified = False
+            except SomeError as err:
+                print('Could not read %s: %s' % (docPath, err))
+
+        dialog.destroy()
         
+        self.updateTitle()
+        
+        return
+        
+    def save_doc( self ):
+        docPath = None
+        if self.docPath:
+            docPath = self.docPath
+        else:
+            dialog = Gtk.FileChooserDialog("Save document", self,
+            Gtk.FileChooserAction.SAVE,
+            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+             Gtk.STOCK_SAVE, Gtk.ResponseType.OK))
+
+            filter_any = Gtk.FileFilter()
+            filter_any.set_name("Any files")
+            filter_any.add_pattern("*")
+            dialog.add_filter(filter_any)
+
+            response = dialog.run()
+            if response == Gtk.ResponseType.OK:
+                docPath = dialog.get_filename()
+            else:
+                docPath = None
+
+            dialog.destroy()
+        
+        if docPath:
+            buff = self.textView.get_buffer()
+            text = buff.get_text( buff.get_start_iter(), buff.get_end_iter(), False)
+            try:
+                open(docPath, 'w').write(text)
+                self.docPath = docPath
+                self.modified = False
+            except SomeError as err:
+                print('Could not save %s: %s' % (docPath, err))
+        
+        self.updateTitle()
+        
+        return
+    
     # attach listners and bindings to the Markdown checker
     def attachListeners(self):
         self.connect("configure-event",self.resizeScroll)
         self.textView.get_buffer().connect("changed",self.bufferChange)
         self.textView.connect("key-release-event", self.keyUp)
         self.textView.connect("button-release-event", self.mouseClick)
+        
+        # open / close
+        self.connect("key-release-event", self.keyShortCuts)
+        
         return
