@@ -11,7 +11,7 @@ class Markdown:
         # create tags
         
         # tags we will be using here
-        self.headTag = self.textBuffer.create_tag( "heading", weight=Pango.Weight.BOLD, indent=8)
+        self.headTag = self.textBuffer.create_tag( "heading", weight=Pango.Weight.BOLD, left_margin=26)
         self.boldTag = self.textBuffer.create_tag( "bold", weight=Pango.Weight.BOLD )
         self.italTag = self.textBuffer.create_tag( "italic", style=Pango.Style.ITALIC )
         self.undrTag = self.textBuffer.create_tag( "underline", underline = Pango.Underline.SINGLE )
@@ -41,6 +41,7 @@ class Markdown:
         
         start = self.textBuffer.get_iter_at_offset( start.get_offset() )
         end = self.textBuffer.get_iter_at_offset( end.get_offset() )
+        end.forward_to_line_end()
         
         self.textBuffer.remove_tag( tag, start, end )
         
@@ -81,13 +82,21 @@ class Markdown:
         
         return
     
+    # Style the entire document
     def styleDoc(self):
-        self.styleScope( 
-            self.textBuffer.get_start_iter(),
-            self.textBuffer.get_end_iter()
-        )
-        return
     
+        start = self.textBuffer.get_start_iter()
+        end   = self.textBuffer.get_end_iter()
+        
+        # loop over lines
+        while start.get_offset() != end.get_offset():        
+            self.styleLine( start )
+            start.forward_line()
+        
+        return
+        
+    
+    # highlight the current sentence
     def updateCurrentSentence( self ):
         
         # first clear currentline
@@ -119,11 +128,17 @@ class Markdown:
             
         return
     
-    def styleLine(self):
-        # get cursor location
-        lineIter = self.textBuffer.get_iter_at_offset( 
-            self.textBuffer.props.cursor_position
-        )
+    
+    # styles the currently selected line
+    def styleLine(self, start=None):
+    
+        if start:
+            lineIter = start
+        else:
+            # get cursor location
+            lineIter = self.textBuffer.get_iter_at_offset( 
+                self.textBuffer.props.cursor_position
+            )
         
         endIter = 0
             

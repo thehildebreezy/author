@@ -8,6 +8,8 @@ class AuthorWindow(Gtk.Window):
     def __init__(self):
         Gtk.Window.__init__(self,title="Author")
         
+        self.set_icon_from_file('resources/BigA.svg')
+        
         self.set_name("mainwindow")
         
         # sets minimum size
@@ -49,7 +51,7 @@ class AuthorWindow(Gtk.Window):
         self.textView.set_wrap_mode( Gtk.WrapMode.WORD_CHAR )
         self.scrolledWindow.add( self.textView)
         self.textView.set_name('mainview')
-        self.setIndent(24)
+        self.setIndent(0)
         self.setMargin(40)
         
         # ste up markdown styler
@@ -57,6 +59,7 @@ class AuthorWindow(Gtk.Window):
         
         # attach working signals
         self.attachListeners()
+        self.updateTitle()
         
         self.connect("destroy", Gtk.main_quit)
         self.show_all()
